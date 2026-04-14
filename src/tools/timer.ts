@@ -34,11 +34,14 @@ export function registerTimerTools(server: McpServer): void {
     'Start a timer for a specific task',
     {
       task_id: z.string().describe('Everhour task ID to start the timer for'),
+      comment: z.string().optional().describe('Optional comment/notes for this time entry'),
     },
-    async ({ task_id }) => {
+    async ({ task_id, comment }) => {
+      const body: Record<string, unknown> = { task: task_id };
+      if (comment) body.comment = comment;
       const timer = await everhourFetch<Timer>('/timers', {
         method: 'POST',
-        body: JSON.stringify({ task: task_id }),
+        body: JSON.stringify(body),
       });
       return {
         content: [

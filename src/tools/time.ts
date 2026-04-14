@@ -19,13 +19,16 @@ export function registerTimeTools(server: McpServer): void {
       task_id: z.string().describe('Everhour task ID (e.g. "ev:12345" or integration-specific)'),
       time: z.number().int().positive().describe('Time spent in seconds'),
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Date in YYYY-MM-DD format'),
+      comment: z.string().optional().describe('Optional comment/notes for this time entry'),
     },
-    async ({ task_id, time, date }) => {
+    async ({ task_id, time, date, comment }) => {
+      const body: Record<string, unknown> = { time, date };
+      if (comment) body.comment = comment;
       const entry = await everhourFetch<TimeEntry>(
         `/tasks/${encodeURIComponent(task_id)}/time`,
         {
           method: 'POST',
-          body: JSON.stringify({ time, date }),
+          body: JSON.stringify(body),
         },
       );
       return {
