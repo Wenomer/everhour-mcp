@@ -37,7 +37,7 @@ A [Model Context Protocol](https://modelcontextprotocol.io) server for the [Ever
 
 ### 1. Get your Everhour API key
 
-Go to [Everhour → Settings → Integrations → API](https://app.everhour.com/#/account/profile) and copy your API key.
+You can find your API key in your [Everhour profile](https://app.everhour.com/#/account/profile) at the bottom of the page. Alternatively, grab the `X-Api-Key` header value from the browser DevTools (Network tab) on any Everhour page.
 
 ### 2. Install dependencies
 
