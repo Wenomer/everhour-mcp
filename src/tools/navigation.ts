@@ -131,7 +131,7 @@ export function registerNavigationTools(server: McpServer): void {
       if (limit !== undefined) params.set('limit', String(limit));
 
       const tasks = await everhourFetch<unknown[]>(
-        `/tasks?${params.toString()}`,
+        `/tasks/search?${params.toString()}`,
       );
       return {
         content: [
