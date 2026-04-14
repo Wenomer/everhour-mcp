@@ -78,7 +78,7 @@ export function registerManageTools(server: McpServer): void {
     {
       project_id: z.string().describe('Project ID'),
       name: z.string().describe('Section name'),
-      status: z.enum(['open', 'closed']).optional().describe('Section status (default "open")'),
+      status: z.enum(['open', 'archived']).optional().describe('Section status (default "open")'),
       position: z.number().int().optional().describe('Position index in the project'),
     },
     async ({ project_id, name, status, position }) => {
@@ -100,20 +100,19 @@ export function registerManageTools(server: McpServer): void {
     'everhour_section_update',
     'Update a section (name, status, position)',
     {
-      project_id: z.string().describe('Project ID'),
       section_id: z.string().describe('Section ID'),
       name: z.string().optional().describe('New section name'),
-      status: z.enum(['open', 'closed']).optional().describe('Section status'),
+      status: z.enum(['open', 'archived']).optional().describe('Section status'),
       position: z.number().int().optional().describe('New position index'),
     },
-    async ({ project_id, section_id, name, status, position }) => {
+    async ({ section_id, name, status, position }) => {
       const body: Record<string, unknown> = {};
       if (name !== undefined) body.name = name;
       if (status !== undefined) body.status = status;
       if (position !== undefined) body.position = position;
 
       const section = await everhourFetch<unknown>(
-        `/projects/${encodeURIComponent(project_id)}/sections/${encodeURIComponent(section_id)}`,
+        `/sections/${encodeURIComponent(section_id)}`,
         { method: 'PUT', body: JSON.stringify(body) },
       );
       return {
@@ -124,18 +123,17 @@ export function registerManageTools(server: McpServer): void {
 
   server.tool(
     'everhour_section_delete',
-    'Delete a section from a project (irreversible)',
+    'Delete a section (irreversible)',
     {
-      project_id: z.string().describe('Project ID'),
       section_id: z.string().describe('Section ID to delete'),
     },
-    async ({ project_id, section_id }) => {
+    async ({ section_id }) => {
       await everhourFetch(
-        `/projects/${encodeURIComponent(project_id)}/sections/${encodeURIComponent(section_id)}`,
+        `/sections/${encodeURIComponent(section_id)}`,
         { method: 'DELETE' },
       );
       return {
-        content: [{ type: 'text' as const, text: `Section ${section_id} deleted from project ${project_id}` }],
+        content: [{ type: 'text' as const, text: `Section ${section_id} deleted` }],
       };
     },
   );

@@ -35,10 +35,12 @@ export function registerTimerTools(server: McpServer): void {
     {
       task_id: z.string().describe('Everhour task ID to start the timer for'),
       comment: z.string().optional().describe('Optional comment/notes for this time entry'),
+      user_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('Current user date (YYYY-MM-DD), used when user timezone differs from server'),
     },
-    async ({ task_id, comment }) => {
+    async ({ task_id, comment, user_date }) => {
       const body: Record<string, unknown> = { task: task_id };
       if (comment) body.comment = comment;
+      if (user_date) body.userDate = user_date;
       const timer = await everhourFetch<Timer>('/timers', {
         method: 'POST',
         body: JSON.stringify(body),

@@ -47,14 +47,13 @@ export function registerNavigationTools(server: McpServer): void {
 
   server.tool(
     'everhour_section_get',
-    'Get a specific section within a project',
+    'Get a specific section by ID',
     {
-      project_id: z.string().describe('Project ID'),
       section_id: z.string().describe('Section ID'),
     },
-    async ({ project_id, section_id }) => {
+    async ({ section_id }) => {
       const section = await everhourFetch<unknown>(
-        `/projects/${encodeURIComponent(project_id)}/sections/${encodeURIComponent(section_id)}`,
+        `/sections/${encodeURIComponent(section_id)}`,
       );
       return {
         content: [
@@ -127,11 +126,39 @@ export function registerNavigationTools(server: McpServer): void {
     },
     async ({ query, search_closed, limit }) => {
       const params = new URLSearchParams({ query });
-      if (search_closed) params.set('searchClosed', 'true');
+      if (search_closed) params.set('searchInClosed', 'true');
       if (limit !== undefined) params.set('limit', String(limit));
 
       const tasks = await everhourFetch<unknown[]>(
         `/tasks/search?${params.toString()}`,
+      );
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(tasks, null, 2),
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    'everhour_project_tasks_search',
+    'Search tasks by keyword within a specific project',
+    {
+      project_id: z.string().describe('Project ID (e.g. "ev:12345678")'),
+      query: z.string().describe('Search keyword or phrase'),
+      search_closed: z.boolean().optional().describe('Include closed tasks in results (default false)'),
+      limit: z.number().int().positive().max(250).optional().describe('Max results (default 50)'),
+    },
+    async ({ project_id, query, search_closed, limit }) => {
+      const params = new URLSearchParams({ query });
+      if (search_closed) params.set('searchInClosed', 'true');
+      if (limit !== undefined) params.set('limit', String(limit));
+
+      const tasks = await everhourFetch<unknown[]>(
+        `/projects/${encodeURIComponent(project_id)}/tasks/search?${params.toString()}`,
       );
       return {
         content: [

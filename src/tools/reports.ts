@@ -58,10 +58,19 @@ export function registerReportTools(server: McpServer): void {
 
   server.tool(
     'everhour_projects_list',
-    'List all projects (useful to discover project and task IDs)',
-    {},
-    async () => {
-      const projects = await everhourFetch<unknown[]>('/projects');
+    'List all projects (useful to discover project and task IDs). Supports filtering by name and platform.',
+    {
+      query: z.string().optional().describe('Search projects by name'),
+      limit: z.number().int().positive().optional().describe('Max results'),
+      platform: z.enum(['as', 'ev', 'b3', 'b2', 'pv', 'gh', 'in', 'tr', 'jr']).optional().describe('Filter by integration platform'),
+    },
+    async ({ query, limit, platform }) => {
+      const params = new URLSearchParams();
+      if (query) params.set('query', query);
+      if (limit !== undefined) params.set('limit', String(limit));
+      if (platform) params.set('platform', platform);
+      const qs = params.toString();
+      const projects = await everhourFetch<unknown[]>(`/projects${qs ? `?${qs}` : ''}`);
       return {
         content: [
           {
