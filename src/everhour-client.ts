@@ -19,6 +19,8 @@ export async function everhourFetch<T = unknown>(
   const headers: Record<string, string> = {
     'X-Api-Key': getApiKey(),
     'Content-Type': 'application/json',
+    'User-Agent': 'everhour-mcp/1.0.0',
+    'X-Accept-Version': '1.2',
     ...(init?.headers as Record<string, string> | undefined),
   };
 
