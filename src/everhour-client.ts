@@ -1,4 +1,13 @@
 const BASE_URL = 'https://api.everhour.com';
+const DEFAULT_TIMEOUT_MS = 30_000;
+
+/** Request timeout in ms, overridable via EVERHOUR_TIMEOUT_MS (falls back to 30s). */
+function getTimeoutMs(): number {
+  const raw = process.env.EVERHOUR_TIMEOUT_MS;
+  if (!raw) return DEFAULT_TIMEOUT_MS;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
+}
 
 /**
  * Build a query string from a set of params, skipping any that are `undefined`.
@@ -39,15 +48,45 @@ export async function everhourFetch<T = unknown>(
     ...(init?.headers as Record<string, string> | undefined),
   };
 
-  const res = await fetch(url, { ...init, headers });
+  const method = init?.method ?? 'GET';
+  const timeoutMs = getTimeoutMs();
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (err) {
+    // fetch() rejects on network failure, DNS errors, or the timeout abort.
+    if (err instanceof DOMException && err.name === 'TimeoutError') {
+      throw new Error(
+        `Everhour API ${method} ${path} timed out after ${timeoutMs}ms. ` +
+          'The service may be unavailable; try again or raise EVERHOUR_TIMEOUT_MS.',
+      );
+    }
+    // Surface the underlying cause (e.g. ECONNREFUSED, ENOTFOUND) which fetch
+    // hides behind a generic "fetch failed" message.
+    const cause = err instanceof Error && err.cause ? ` (${String(err.cause)})` : '';
+    const reason = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `Everhour API ${method} ${path} could not reach the server: ${reason}${cause}`,
+    );
+  }
 
   if (res.status === 204) return undefined as T;
 
   const body = await res.text();
 
   if (!res.ok) {
+    const retryAfter = res.headers.get('retry-after');
+    const retryHint =
+      res.status === 429 && retryAfter
+        ? ` (rate limited — retry after ${retryAfter}s)`
+        : '';
     throw new Error(
-      `Everhour API ${init?.method ?? 'GET'} ${path} → ${res.status}: ${body}`,
+      `Everhour API ${method} ${path} → ${res.status}${retryHint}: ${body}`,
     );
   }
 

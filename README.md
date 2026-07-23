@@ -112,6 +112,13 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
+### Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `EVERHOUR_API_KEY` | yes | — | Your Everhour API key |
+| `EVERHOUR_TIMEOUT_MS` | no | `30000` | Per-request timeout in milliseconds. Requests that exceed it fail with a clear timeout error instead of hanging. |
+
 ## Testing
 
 ```bash
