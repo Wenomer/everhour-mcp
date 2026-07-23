@@ -1,5 +1,20 @@
 const BASE_URL = 'https://api.everhour.com';
 
+/**
+ * Build a query string from a set of params, skipping any that are `undefined`.
+ * Returns a leading "?" when there is at least one param, or "" otherwise.
+ */
+export function buildQuery(
+  params: Record<string, string | number | boolean | undefined>,
+): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) search.set(key, String(value));
+  }
+  const qs = search.toString();
+  return qs ? `?${qs}` : '';
+}
+
 function getApiKey(): string {
   const key = process.env.EVERHOUR_API_KEY;
   if (!key) {

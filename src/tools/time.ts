@@ -1,16 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { everhourFetch } from '../everhour-client.js';
-
-interface TimeEntry {
-  id: number;
-  task: { id: string; name: string };
-  user: number;
-  date: string;
-  time: number;
-  comment?: string;
-  history?: unknown[];
-}
+import { everhourFetch, buildQuery } from '../everhour-client.js';
+import type { TimeEntry } from '../types.js';
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -25,15 +16,10 @@ export function registerTimeTools(server: McpServer): void {
       limit: z.number().int().positive().max(50000).optional().describe('Max results (default 10000, max 50000)'),
       page: z.number().int().positive().optional().describe('Page number'),
     },
+    { title: 'Time records by user', readOnlyHint: true, openWorldHint: true },
     async ({ user_id, from, to, limit, page }) => {
-      const params = new URLSearchParams();
-      if (from) params.set('from', from);
-      if (to) params.set('to', to);
-      if (limit !== undefined) params.set('limit', String(limit));
-      if (page !== undefined) params.set('page', String(page));
-      const qs = params.toString();
-      const entries = await everhourFetch<unknown[]>(
-        `/users/${user_id}/time${qs ? `?${qs}` : ''}`,
+      const entries = await everhourFetch<TimeEntry[]>(
+        `/users/${user_id}/time${buildQuery({ from, to, limit, page })}`,
       );
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(entries, null, 2) }],
@@ -51,15 +37,10 @@ export function registerTimeTools(server: McpServer): void {
       limit: z.number().int().positive().max(50000).optional().describe('Max results (default 10000, max 50000)'),
       page: z.number().int().positive().optional().describe('Page number'),
     },
+    { title: 'Time records by task', readOnlyHint: true, openWorldHint: true },
     async ({ task_id, from, to, limit, page }) => {
-      const params = new URLSearchParams();
-      if (from) params.set('from', from);
-      if (to) params.set('to', to);
-      if (limit !== undefined) params.set('limit', String(limit));
-      if (page !== undefined) params.set('page', String(page));
-      const qs = params.toString();
-      const entries = await everhourFetch<unknown[]>(
-        `/tasks/${encodeURIComponent(task_id)}/time${qs ? `?${qs}` : ''}`,
+      const entries = await everhourFetch<TimeEntry[]>(
+        `/tasks/${encodeURIComponent(task_id)}/time${buildQuery({ from, to, limit, page })}`,
       );
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(entries, null, 2) }],
@@ -77,15 +58,10 @@ export function registerTimeTools(server: McpServer): void {
       limit: z.number().int().positive().max(50000).optional().describe('Max results (default 10000, max 50000)'),
       page: z.number().int().positive().optional().describe('Page number'),
     },
+    { title: 'Time records by project', readOnlyHint: true, openWorldHint: true },
     async ({ project_id, from, to, limit, page }) => {
-      const params = new URLSearchParams();
-      if (from) params.set('from', from);
-      if (to) params.set('to', to);
-      if (limit !== undefined) params.set('limit', String(limit));
-      if (page !== undefined) params.set('page', String(page));
-      const qs = params.toString();
-      const entries = await everhourFetch<unknown[]>(
-        `/projects/${encodeURIComponent(project_id)}/time${qs ? `?${qs}` : ''}`,
+      const entries = await everhourFetch<TimeEntry[]>(
+        `/projects/${encodeURIComponent(project_id)}/time${buildQuery({ from, to, limit, page })}`,
       );
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(entries, null, 2) }],
@@ -103,6 +79,7 @@ export function registerTimeTools(server: McpServer): void {
       user_id: z.number().int().optional().describe('User ID (admin only, defaults to current user)'),
       comment: z.string().optional().describe('Optional comment/notes for this time entry'),
     },
+    { title: 'Add time entry', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     async ({ time, date, task_id, user_id, comment }) => {
       const body: Record<string, unknown> = { time, date };
       if (task_id) body.task = task_id;
@@ -133,6 +110,7 @@ export function registerTimeTools(server: McpServer): void {
       task_id: z.string().optional().describe('Move record to a different task'),
       comment: z.string().optional().describe('Update comment'),
     },
+    { title: 'Update time record', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     async ({ time_id, time, date, task_id, comment }) => {
       const body: Record<string, unknown> = {};
       if (time !== undefined) body.time = time;
@@ -156,11 +134,18 @@ export function registerTimeTools(server: McpServer): void {
 
   server.tool(
     'everhour_time_delete',
-    'Delete a time record by its ID',
+    'Delete a time record by its ID (irreversible). Requires confirm:true to execute; otherwise returns what would be deleted.',
     {
       time_id: z.number().int().describe('Time record ID to delete'),
+      confirm: z.boolean().optional().describe('Set to true to actually delete. If omitted/false, nothing is deleted and a confirmation prompt is returned.'),
     },
-    async ({ time_id }) => {
+    { title: 'Delete time record', readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    async ({ time_id, confirm }) => {
+      if (!confirm) {
+        return {
+          content: [{ type: 'text' as const, text: `⚠️ This will permanently delete time record ${time_id} and cannot be undone. Re-run with confirm: true to proceed.` }],
+        };
+      }
       const entry = await everhourFetch<TimeEntry>(`/time/${time_id}`, {
         method: 'DELETE',
       });

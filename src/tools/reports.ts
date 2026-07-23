@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { everhourFetch } from '../everhour-client.js';
+import { everhourFetch, buildQuery } from '../everhour-client.js';
+import type { Project, TimeEntry } from '../types.js';
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -14,13 +15,10 @@ export function registerReportTools(server: McpServer): void {
       user_id: z.number().int().optional().describe('Filter by user ID'),
       project_id: z.string().optional().describe('Filter by project ID'),
     },
+    { title: 'Export team time', readOnlyHint: true, openWorldHint: true },
     async ({ from, to, user_id, project_id }) => {
-      const params = new URLSearchParams({ from, to });
-      if (user_id !== undefined) params.set('user', String(user_id));
-      if (project_id !== undefined) params.set('project', project_id);
-
-      const entries = await everhourFetch<unknown[]>(
-        `/team/time?${params.toString()}`,
+      const entries = await everhourFetch<TimeEntry[]>(
+        `/team/time${buildQuery({ from, to, user: user_id, project: project_id })}`,
       );
       return {
         content: [
@@ -40,10 +38,10 @@ export function registerReportTools(server: McpServer): void {
       from: z.string().regex(datePattern).describe('Start date (YYYY-MM-DD)'),
       to: z.string().regex(datePattern).describe('End date (YYYY-MM-DD)'),
     },
+    { title: 'My time entries', readOnlyHint: true, openWorldHint: true },
     async ({ from, to }) => {
-      const params = new URLSearchParams({ from, to });
-      const entries = await everhourFetch<unknown[]>(
-        `/users/me/time?${params.toString()}`,
+      const entries = await everhourFetch<TimeEntry[]>(
+        `/users/me/time${buildQuery({ from, to })}`,
       );
       return {
         content: [
@@ -64,13 +62,11 @@ export function registerReportTools(server: McpServer): void {
       limit: z.number().int().positive().optional().describe('Max results'),
       platform: z.enum(['as', 'ev', 'b3', 'b2', 'pv', 'gh', 'in', 'tr', 'jr']).optional().describe('Filter by integration platform'),
     },
+    { title: 'List projects', readOnlyHint: true, openWorldHint: true },
     async ({ query, limit, platform }) => {
-      const params = new URLSearchParams();
-      if (query) params.set('query', query);
-      if (limit !== undefined) params.set('limit', String(limit));
-      if (platform) params.set('platform', platform);
-      const qs = params.toString();
-      const projects = await everhourFetch<unknown[]>(`/projects${qs ? `?${qs}` : ''}`);
+      const projects = await everhourFetch<Project[]>(
+        `/projects${buildQuery({ query, limit, platform })}`,
+      );
       return {
         content: [
           {

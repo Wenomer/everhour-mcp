@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { everhourFetch } from '../everhour-client.js';
+import type { Project, Section, Task } from '../types.js';
 
 export function registerManageTools(server: McpServer): void {
   // ── Projects ──────────────────────────────────────────────
@@ -13,12 +14,13 @@ export function registerManageTools(server: McpServer): void {
       type: z.enum(['board', 'list']).optional().describe('Project type (default "board")'),
       users: z.array(z.number().int()).optional().describe('User IDs to assign to the project'),
     },
+    { title: 'Create project', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     async ({ name, type, users }) => {
       const body: Record<string, unknown> = { name };
       if (type) body.type = type;
       if (users) body.users = users;
 
-      const project = await everhourFetch<unknown>('/projects', {
+      const project = await everhourFetch<Project>('/projects', {
         method: 'POST',
         body: JSON.stringify(body),
       });
@@ -37,13 +39,14 @@ export function registerManageTools(server: McpServer): void {
       type: z.enum(['board', 'list']).optional().describe('Project type'),
       users: z.array(z.number().int()).optional().describe('User IDs to assign'),
     },
+    { title: 'Update project', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     async ({ project_id, name, type, users }) => {
       const body: Record<string, unknown> = {};
       if (name !== undefined) body.name = name;
       if (type !== undefined) body.type = type;
       if (users !== undefined) body.users = users;
 
-      const project = await everhourFetch<unknown>(
+      const project = await everhourFetch<Project>(
         `/projects/${encodeURIComponent(project_id)}`,
         { method: 'PUT', body: JSON.stringify(body) },
       );
@@ -55,11 +58,18 @@ export function registerManageTools(server: McpServer): void {
 
   server.tool(
     'everhour_project_delete',
-    'Delete a project (irreversible)',
+    'Delete a project (irreversible). Requires confirm:true to execute; otherwise returns what would be deleted.',
     {
       project_id: z.string().describe('Project ID to delete'),
+      confirm: z.boolean().optional().describe('Set to true to actually delete. If omitted/false, nothing is deleted and a confirmation prompt is returned.'),
     },
-    async ({ project_id }) => {
+    { title: 'Delete project', readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    async ({ project_id, confirm }) => {
+      if (!confirm) {
+        return {
+          content: [{ type: 'text' as const, text: `⚠️ This will permanently delete project ${project_id} and cannot be undone. Re-run with confirm: true to proceed.` }],
+        };
+      }
       await everhourFetch(
         `/projects/${encodeURIComponent(project_id)}`,
         { method: 'DELETE' },
@@ -81,12 +91,13 @@ export function registerManageTools(server: McpServer): void {
       status: z.enum(['open', 'archived']).optional().describe('Section status (default "open")'),
       position: z.number().int().optional().describe('Position index in the project'),
     },
+    { title: 'Create section', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     async ({ project_id, name, status, position }) => {
       const body: Record<string, unknown> = { name };
       if (status) body.status = status;
       if (position !== undefined) body.position = position;
 
-      const section = await everhourFetch<unknown>(
+      const section = await everhourFetch<Section>(
         `/projects/${encodeURIComponent(project_id)}/sections`,
         { method: 'POST', body: JSON.stringify(body) },
       );
@@ -105,13 +116,14 @@ export function registerManageTools(server: McpServer): void {
       status: z.enum(['open', 'archived']).optional().describe('Section status'),
       position: z.number().int().optional().describe('New position index'),
     },
+    { title: 'Update section', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     async ({ section_id, name, status, position }) => {
       const body: Record<string, unknown> = {};
       if (name !== undefined) body.name = name;
       if (status !== undefined) body.status = status;
       if (position !== undefined) body.position = position;
 
-      const section = await everhourFetch<unknown>(
+      const section = await everhourFetch<Section>(
         `/sections/${encodeURIComponent(section_id)}`,
         { method: 'PUT', body: JSON.stringify(body) },
       );
@@ -123,11 +135,18 @@ export function registerManageTools(server: McpServer): void {
 
   server.tool(
     'everhour_section_delete',
-    'Delete a section (irreversible)',
+    'Delete a section (irreversible). Requires confirm:true to execute; otherwise returns what would be deleted.',
     {
       section_id: z.string().describe('Section ID to delete'),
+      confirm: z.boolean().optional().describe('Set to true to actually delete. If omitted/false, nothing is deleted and a confirmation prompt is returned.'),
     },
-    async ({ section_id }) => {
+    { title: 'Delete section', readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    async ({ section_id, confirm }) => {
+      if (!confirm) {
+        return {
+          content: [{ type: 'text' as const, text: `⚠️ This will permanently delete section ${section_id} and cannot be undone. Re-run with confirm: true to proceed.` }],
+        };
+      }
       await everhourFetch(
         `/sections/${encodeURIComponent(section_id)}`,
         { method: 'DELETE' },
@@ -152,6 +171,7 @@ export function registerManageTools(server: McpServer): void {
       description: z.string().optional().describe('Task description'),
       due_on: z.string().optional().describe('Due date (YYYY-MM-DD)'),
     },
+    { title: 'Create task', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     async ({ project_id, name, section_id, status, labels, description, due_on }) => {
       const body: Record<string, unknown> = { name };
       if (section_id) body.section = section_id;
@@ -160,7 +180,7 @@ export function registerManageTools(server: McpServer): void {
       if (description) body.description = description;
       if (due_on) body.dueOn = due_on;
 
-      const task = await everhourFetch<unknown>(
+      const task = await everhourFetch<Task>(
         `/projects/${encodeURIComponent(project_id)}/tasks`,
         { method: 'POST', body: JSON.stringify(body) },
       );
@@ -182,6 +202,7 @@ export function registerManageTools(server: McpServer): void {
       description: z.string().optional().describe('Task description'),
       due_on: z.string().optional().describe('Due date (YYYY-MM-DD)'),
     },
+    { title: 'Update task', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     async ({ task_id, name, section_id, status, labels, description, due_on }) => {
       const body: Record<string, unknown> = {};
       if (name !== undefined) body.name = name;
@@ -191,7 +212,7 @@ export function registerManageTools(server: McpServer): void {
       if (description !== undefined) body.description = description;
       if (due_on !== undefined) body.dueOn = due_on;
 
-      const task = await everhourFetch<unknown>(
+      const task = await everhourFetch<Task>(
         `/tasks/${encodeURIComponent(task_id)}`,
         { method: 'PUT', body: JSON.stringify(body) },
       );
@@ -203,11 +224,18 @@ export function registerManageTools(server: McpServer): void {
 
   server.tool(
     'everhour_task_delete',
-    'Delete a task (irreversible)',
+    'Delete a task (irreversible). Requires confirm:true to execute; otherwise returns what would be deleted.',
     {
       task_id: z.string().describe('Task ID to delete'),
+      confirm: z.boolean().optional().describe('Set to true to actually delete. If omitted/false, nothing is deleted and a confirmation prompt is returned.'),
     },
-    async ({ task_id }) => {
+    { title: 'Delete task', readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    async ({ task_id, confirm }) => {
+      if (!confirm) {
+        return {
+          content: [{ type: 'text' as const, text: `⚠️ This will permanently delete task ${task_id} and cannot be undone. Re-run with confirm: true to proceed.` }],
+        };
+      }
       await everhourFetch(
         `/tasks/${encodeURIComponent(task_id)}`,
         { method: 'DELETE' },
