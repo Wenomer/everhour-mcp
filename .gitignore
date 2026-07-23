@@ -1,7 +1,9 @@
 node_modules/
 dist/
+coverage/
 *.js
 *.d.ts
 *.js.map
 !src/**
+!test/**
 .idea

@@ -112,6 +112,15 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
+## Testing
+
+```bash
+npm test          # run once
+npm run test:watch # watch mode
+```
+
+Tests use [Vitest](https://vitest.dev). Tool handlers are exercised against a stub MCP server with `everhourFetch` mocked, so no network access or API key is required.
+
 ## Tech Stack
 
 - TypeScript + [tsx](https://github.com/privatenumber/tsx)
