@@ -6,4 +6,5 @@ coverage/
 *.js.map
 !src/**
 !test/**
+!eslint.config.js
 .idea
