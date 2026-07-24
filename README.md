@@ -1,5 +1,7 @@
 # Everhour MCP Server
 
+[![CI](https://github.com/Wenomer/everhour-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Wenomer/everhour-mcp/actions/workflows/ci.yml)
+
 A [Model Context Protocol](https://modelcontextprotocol.io) server for the [Everhour](https://everhour.com) time tracking API. Gives AI assistants (Cursor, Claude, etc.) full access to your Everhour workspace — timers, time entries, projects, tasks, and team reports.
 
 ## Tools
