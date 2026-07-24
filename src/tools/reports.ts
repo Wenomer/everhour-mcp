@@ -60,7 +60,10 @@ export function registerReportTools(server: McpServer): void {
     {
       query: z.string().optional().describe('Search projects by name'),
       limit: z.number().int().positive().optional().describe('Max results'),
-      platform: z.enum(['as', 'ev', 'b3', 'b2', 'pv', 'gh', 'in', 'tr', 'jr']).optional().describe('Filter by integration platform'),
+      platform: z
+        .enum(['as', 'ev', 'b3', 'b2', 'pv', 'gh', 'in', 'tr', 'jr'])
+        .optional()
+        .describe('Filter by integration platform'),
     },
     { title: 'List projects', readOnlyHint: true, openWorldHint: true },
     async ({ query, limit, platform }) => {

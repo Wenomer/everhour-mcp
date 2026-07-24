@@ -36,7 +36,9 @@ describe('everhourFetch success paths', () => {
 
   it('returns undefined for 204 No Content', async () => {
     fetchMock.mockResolvedValue(makeResponse(204));
-    await expect(everhourFetch('/time/1', { method: 'DELETE' })).resolves.toBeUndefined();
+    await expect(
+      everhourFetch('/time/1', { method: 'DELETE' }),
+    ).resolves.toBeUndefined();
   });
 
   it('sends the API key and passes an abort signal', async () => {
@@ -55,7 +57,9 @@ describe('everhourFetch when the API is unavailable', () => {
     (err as Error & { cause?: unknown }).cause = new Error('ECONNREFUSED');
     fetchMock.mockRejectedValue(err);
 
-    await expect(everhourFetch('/users/me')).rejects.toThrow(/could not reach the server/);
+    await expect(everhourFetch('/users/me')).rejects.toThrow(
+      /could not reach the server/,
+    );
     await expect(everhourFetch('/users/me')).rejects.toThrow(/ECONNREFUSED/);
   });
 
@@ -63,7 +67,9 @@ describe('everhourFetch when the API is unavailable', () => {
     fetchMock.mockRejectedValue(
       new DOMException('The operation timed out', 'TimeoutError'),
     );
-    await expect(everhourFetch('/users/me')).rejects.toThrow(/timed out after \d+ms/);
+    await expect(everhourFetch('/users/me')).rejects.toThrow(
+      /timed out after \d+ms/,
+    );
   });
 
   it('honours EVERHOUR_TIMEOUT_MS in the timeout message', async () => {
@@ -71,7 +77,9 @@ describe('everhourFetch when the API is unavailable', () => {
     fetchMock.mockRejectedValue(
       new DOMException('The operation timed out', 'TimeoutError'),
     );
-    await expect(everhourFetch('/users/me')).rejects.toThrow(/timed out after 5000ms/);
+    await expect(everhourFetch('/users/me')).rejects.toThrow(
+      /timed out after 5000ms/,
+    );
   });
 });
 

@@ -15,7 +15,10 @@ export interface CapturedTool {
   description?: string;
   schema?: Record<string, unknown>;
   annotations?: Record<string, unknown>;
-  handler: (args: Record<string, unknown>, extra?: unknown) => Promise<ToolResult>;
+  handler: (
+    args: Record<string, unknown>,
+    extra?: unknown,
+  ) => Promise<ToolResult>;
 }
 
 const ANNOTATION_KEYS = [
@@ -54,7 +57,8 @@ export function registerAllTools(): Map<string, CapturedTool> {
 
       for (const part of middle) {
         if (typeof part === 'string') description = part;
-        else if (looksLikeAnnotations(part)) annotations = part as Record<string, unknown>;
+        else if (looksLikeAnnotations(part))
+          annotations = part as Record<string, unknown>;
         else schema = part as Record<string, unknown>;
       }
 

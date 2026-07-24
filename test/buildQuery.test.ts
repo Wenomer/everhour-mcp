@@ -8,7 +8,9 @@ describe('buildQuery', () => {
 
   it('skips undefined values', () => {
     expect(buildQuery({ from: undefined, to: undefined })).toBe('');
-    expect(buildQuery({ from: '2024-01-01', to: undefined })).toBe('?from=2024-01-01');
+    expect(buildQuery({ from: '2024-01-01', to: undefined })).toBe(
+      '?from=2024-01-01',
+    );
   });
 
   it('keeps a leading "?" and joins multiple params', () => {

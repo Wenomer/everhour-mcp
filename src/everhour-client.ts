@@ -64,14 +64,17 @@ export async function everhourFetch<T = unknown>(
       throw new Error(
         `Everhour API ${method} ${path} timed out after ${timeoutMs}ms. ` +
           'The service may be unavailable; try again or raise EVERHOUR_TIMEOUT_MS.',
+        { cause: err },
       );
     }
     // Surface the underlying cause (e.g. ECONNREFUSED, ENOTFOUND) which fetch
     // hides behind a generic "fetch failed" message.
-    const cause = err instanceof Error && err.cause ? ` (${String(err.cause)})` : '';
+    const cause =
+      err instanceof Error && err.cause ? ` (${String(err.cause)})` : '';
     const reason = err instanceof Error ? err.message : String(err);
     throw new Error(
       `Everhour API ${method} ${path} could not reach the server: ${reason}${cause}`,
+      { cause: err },
     );
   }
 

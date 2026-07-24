@@ -6,63 +6,63 @@ A [Model Context Protocol](https://modelcontextprotocol.io) server for the [Ever
 
 ### Users
 
-| Tool | Description |
-|------|-------------|
-| `everhour_me` | Get your profile |
+| Tool                  | Description           |
+| --------------------- | --------------------- |
+| `everhour_me`         | Get your profile      |
 | `everhour_team_users` | List all team members |
 
 ### Timers
 
-| Tool | Description |
-|------|-------------|
-| `everhour_timer_current` | Get running timer |
-| `everhour_timer_start` | Start a timer for a task |
-| `everhour_timer_stop` | Stop the running timer |
+| Tool                     | Description              |
+| ------------------------ | ------------------------ |
+| `everhour_timer_current` | Get running timer        |
+| `everhour_timer_start`   | Start a timer for a task |
+| `everhour_timer_stop`    | Stop the running timer   |
 
 ### Time Records
 
-| Tool | Description |
-|------|-------------|
-| `everhour_time_add` | Add a time entry |
-| `everhour_time_update` | Update a time record by ID |
-| `everhour_time_delete` | Delete a time record by ID |
-| `everhour_time_by_user` | Get time records for a specific user |
-| `everhour_time_by_task` | Get time records for a specific task |
-| `everhour_time_by_project` | Get time records for a specific project |
-| `everhour_user_time` | Get your own time entries for a date range |
-| `everhour_team_time` | Export team time (with user/project filters) |
+| Tool                       | Description                                  |
+| -------------------------- | -------------------------------------------- |
+| `everhour_time_add`        | Add a time entry                             |
+| `everhour_time_update`     | Update a time record by ID                   |
+| `everhour_time_delete`     | Delete a time record by ID                   |
+| `everhour_time_by_user`    | Get time records for a specific user         |
+| `everhour_time_by_task`    | Get time records for a specific task         |
+| `everhour_time_by_project` | Get time records for a specific project      |
+| `everhour_user_time`       | Get your own time entries for a date range   |
+| `everhour_team_time`       | Export team time (with user/project filters) |
 
 ### Projects
 
-| Tool | Description |
-|------|-------------|
-| `everhour_projects_list` | List all projects |
-| `everhour_project_get` | Get a project by ID |
-| `everhour_project_create` | Create a project |
-| `everhour_project_update` | Update a project |
-| `everhour_project_delete` | Delete a project |
+| Tool                      | Description         |
+| ------------------------- | ------------------- |
+| `everhour_projects_list`  | List all projects   |
+| `everhour_project_get`    | Get a project by ID |
+| `everhour_project_create` | Create a project    |
+| `everhour_project_update` | Update a project    |
+| `everhour_project_delete` | Delete a project    |
 
 ### Sections
 
-| Tool | Description |
-|------|-------------|
-| `everhour_sections_list` | List sections in a project |
-| `everhour_section_get` | Get a section by ID |
+| Tool                      | Description                   |
+| ------------------------- | ----------------------------- |
+| `everhour_sections_list`  | List sections in a project    |
+| `everhour_section_get`    | Get a section by ID           |
 | `everhour_section_create` | Create a section in a project |
-| `everhour_section_update` | Update a section |
-| `everhour_section_delete` | Delete a section |
+| `everhour_section_update` | Update a section              |
+| `everhour_section_delete` | Delete a section              |
 
 ### Tasks
 
-| Tool | Description |
-|------|-------------|
-| `everhour_tasks_list` | List tasks in a project |
-| `everhour_task_get` | Get a task by ID |
-| `everhour_tasks_search` | Search tasks by keyword across all projects |
+| Tool                            | Description                                       |
+| ------------------------------- | ------------------------------------------------- |
+| `everhour_tasks_list`           | List tasks in a project                           |
+| `everhour_task_get`             | Get a task by ID                                  |
+| `everhour_tasks_search`         | Search tasks by keyword across all projects       |
 | `everhour_project_tasks_search` | Search tasks by keyword within a specific project |
-| `everhour_task_create` | Create a task |
-| `everhour_task_update` | Update a task |
-| `everhour_task_delete` | Delete a task |
+| `everhour_task_create`          | Create a task                                     |
+| `everhour_task_update`          | Update a task                                     |
+| `everhour_task_delete`          | Delete a task                                     |
 
 ## Setup
 
@@ -114,10 +114,10 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ### Environment variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `EVERHOUR_API_KEY` | yes | — | Your Everhour API key |
-| `EVERHOUR_TIMEOUT_MS` | no | `30000` | Per-request timeout in milliseconds. Requests that exceed it fail with a clear timeout error instead of hanging. |
+| Variable              | Required | Default | Description                                                                                                      |
+| --------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `EVERHOUR_API_KEY`    | yes      | —       | Your Everhour API key                                                                                            |
+| `EVERHOUR_TIMEOUT_MS` | no       | `30000` | Per-request timeout in milliseconds. Requests that exceed it fail with a clear timeout error instead of hanging. |
 
 ## Testing
 
@@ -127,6 +127,16 @@ npm run test:watch # watch mode
 ```
 
 Tests use [Vitest](https://vitest.dev). Tool handlers are exercised against a stub MCP server with `everhourFetch` mocked, so no network access or API key is required.
+
+## Linting & formatting
+
+```bash
+npm run lint          # ESLint
+npm run format        # Prettier — write
+npm run format:check  # Prettier — verify only
+```
+
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs lint, format check, `tsc`, and tests on every push to `main` and on pull requests.
 
 ## Tech Stack
 
